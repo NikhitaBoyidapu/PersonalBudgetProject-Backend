@@ -148,6 +148,41 @@ app.post('/addbudget', async (req, res) => {
   }
 });
 
+app.post('/deletebudget', jwtMW, (req, res) => {
+  const { title, month } = req.body;
+  const username = req.user.email; // Assuming you store the username in the JWT payload
+
+  const deleteQuery = `
+    DELETE FROM Budget
+    WHERE title = ? AND username = ? AND month = ?;
+  `;
+
+  connection.query(deleteQuery, [title, username, month], (error, results) => {
+    if (error) {
+      console.error('Error executing delete query:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    } else {
+      console.log('Delete successful:', results);
+      res.json({ success: true, message: 'Category deleted successfully' });
+    }
+  });
+});
+
+app.get('/gettitles/:username', (req, res) => {
+  const username = req.params.username;
+
+  // Assuming there's a table named 'budgets' with a structure that fits your needs
+  const sql = 'SELECT title,month FROM Budget WHERE username = ?';
+
+  connection.query(sql, [username], (error, results) => {
+    if (error) {
+      console.error('Error querying the database for titles:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json(results);
+    }
+  });
+});
 
 app.post('/api/login', (req, res) => {
   const sql = 'SELECT * FROM User WHERE Email=? AND Password=?';
